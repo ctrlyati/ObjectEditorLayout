@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="EditorLayout">
+        <attr name="show_selecting_item" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="EditorObjectWrapper">
+        <attr name="editor_function" format="integer">
+            <flag name="move_x" value="1" />
+            <flag name="move_y" value="2" />
+            <flag name="rotation" value="4" />
+            <flag name="scale_x" value="8" />
+            <flag name="scale_y" value="16" />
+
+            <flag name="move" value="3" />
+            <flag name="scale" value="24" />
+            <flag name="all" value="31" />
+        </attr>
+
+    </declare-styleable>
+
+</resources>
