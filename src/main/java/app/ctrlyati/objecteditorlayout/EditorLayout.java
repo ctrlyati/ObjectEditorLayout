@@ -1,13 +1,7 @@
 package app.ctrlyati.objecteditorlayout;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.os.Build;
-import android.support.v4.view.ScaleGestureDetectorCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,24 +16,38 @@ import android.widget.RelativeLayout;
 public class EditorLayout extends RelativeLayout {
 
     private static final String TAG = "ObjectEditorLayout";
-    private final boolean mShowSelecting;
+    private final boolean mIsShowSelecting;
+    private final boolean mIsSupportMultiTouch;
 
     private TouchState mTouchState = TouchState.IDLE;
 
     private static final int CLICK_RADIUS = 20;
 
+    private int mSmallestObjectSize;
+
+    private float mMultiTouchStartSize = 0f;
+    private float[] mObjectStartSize = new float[]{ 0f, 0f };
+
+    private double mMultiTouchStartRotation = 0f;
+    private float mObjectStartRotation = 0;
+
+    private float[] mMultiTouchStartPosition = new float[]{
+            0f, 0f
+    };
     private float[] mTouchStartPosition = new float[]{ 0f, 0f };
+
     private float[] mObjectStartPosition = new float[]{ 0f, 0f };
-
     private EditorObjectWrapper mSelectingChild;
-    private EditorObjectWrapper mTouchStatObject;
 
+    private EditorObjectWrapper mTouchStatObject;
     private ScaleGestureDetector mScaleGestureDetector;
 
     private enum TouchState {
         IDLE,
         DOWN,
         DRAG,
+        MULTI_DOWN,
+        MULTI_DRAG,
     }
 
     public EditorLayout(Context context) {
@@ -57,10 +65,15 @@ public class EditorLayout extends RelativeLayout {
                 context.obtainStyledAttributes(attrs, R.styleable.EditorObjectWrapper, defStyleAttr,
                         0);
 
-        mShowSelecting =
+        mIsShowSelecting =
                 typedArray.getBoolean(R.styleable.EditorObjectWrapper_editor_function, true);
+        mIsSupportMultiTouch =
+                typedArray.getBoolean(R.styleable.EditorLayout_multitouch_support, true);
 
         typedArray.recycle();
+
+        mSmallestObjectSize =
+                context.getResources().getDimensionPixelSize(R.dimen.smallest_object_size);
 
         mScaleGestureDetector = new ScaleGestureDetector(getContext(),
                 new ScaleGestureDetector.OnScaleGestureListener() {
@@ -85,10 +98,6 @@ public class EditorLayout extends RelativeLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
-        //if (mScaleGestureDetector.onTouchEvent(event)) {
-        //mTouchState = TouchState.IDLE;
-        //}
-
         if (event.getPointerCount() < 2) {
 
             MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();
@@ -96,7 +105,11 @@ public class EditorLayout extends RelativeLayout {
 
             if (mTouchState == TouchState.IDLE) {
 
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN
+                        || event.getAction() == MotionEvent.ACTION_MOVE) {
+
+                    // when the first touch down
+                    // and make sure if dragging while state lost
 
                     mTouchStartPosition[0] = pointerCoords.x;
                     mTouchStartPosition[1] = pointerCoords.y;
@@ -110,11 +123,6 @@ public class EditorLayout extends RelativeLayout {
                             getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
 
                     mTouchState = TouchState.DOWN;
-                    Log.d(TAG, "down...("
-                            + mTouchStartPosition[0]
-                            + ","
-                            + mTouchStartPosition[1]
-                            + ")");
                     return true;
                 }
             } else if (mTouchState == TouchState.DOWN) {
@@ -126,7 +134,9 @@ public class EditorLayout extends RelativeLayout {
 
                     if (CLICK_RADIUS >= Math.sqrt(radiusX * radiusX + radiusY * radiusY)) {
 
-                        if (mSelectingChild != null && mShowSelecting) {
+                        // trying to called it 'click'
+
+                        if (mSelectingChild != null && mIsShowSelecting) {
                             mSelectingChild.showBorder(false);
                         }
 
@@ -134,19 +144,17 @@ public class EditorLayout extends RelativeLayout {
                                 getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
 
                         if (mSelectingChild == null) {
+
+                            // click on nothing
                             mTouchState = TouchState.IDLE;
                             return false;
                         }
 
-                        if (mShowSelecting) {
+                        if (mIsShowSelecting) {
+                            // show clicking if you set it to show
                             mSelectingChild.showBorder(true);
                         }
-
-                        Log.d(TAG, "click...("
-                                + mTouchStartPosition[0]
-                                + ","
-                                + mTouchStartPosition[1]
-                                + ")");
+                        // clicking done
 
                         mTouchStartPosition = new float[]{ 0f, 0f };
 
@@ -163,24 +171,31 @@ public class EditorLayout extends RelativeLayout {
 
                     if (CLICK_RADIUS < Math.sqrt(radiusX * radiusX + radiusY * radiusY)) {
 
-                        Log.d(TAG, "start drag...("
-                                + mTouchStartPosition[0]
-                                + ","
-                                + mTouchStartPosition[1]
-                                + ")");
+                        // start drag
+
                         mTouchState = TouchState.DRAG;
                         return true;
                     }
                 } else {
+
+                    // lost state, make it idle
+
                     mTouchState = TouchState.IDLE;
                 }
             } else if (mTouchState == TouchState.DRAG) {
+
                 if (event.getAction() == MotionEvent.ACTION_MOVE) {
+
+                    // drag
 
                     float dragX = pointerCoords.x;
                     float dragY = pointerCoords.y;
 
-                    if (mSelectingChild == mTouchStatObject && mSelectingChild != null) {
+                    // add this line to the if below to make it drag when it's start
+                    // touching on the object that you want to drag
+                    // mSelectingChild == mTouchStatObject &&
+
+                    if (mSelectingChild != null) {
 
                         float newX = mObjectStartPosition[0] + (dragX - mTouchStartPosition[0]);
                         float newY = mObjectStartPosition[1] + (dragY - mTouchStartPosition[1]);
@@ -206,12 +221,6 @@ public class EditorLayout extends RelativeLayout {
                     return false;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
 
-                    Log.d(TAG, "stop drag...("
-                            + mTouchStartPosition[0]
-                            + ","
-                            + mTouchStartPosition[1]
-                            + ")");
-
                     mTouchState = TouchState.IDLE;
                     return true;
                 }
@@ -219,8 +228,126 @@ public class EditorLayout extends RelativeLayout {
 
                 mTouchState = TouchState.IDLE;
             }
-        } else {
+        } else if (mIsSupportMultiTouch && event.getPointerCount() == 2) {
 
+            if (mTouchState != TouchState.MULTI_DOWN && mTouchState != TouchState.MULTI_DRAG) {
+                mTouchState = TouchState.MULTI_DOWN;
+
+                return true;
+            } else if (mTouchState == TouchState.MULTI_DOWN) {
+
+                if (mSelectingChild != null) {
+                    mObjectStartPosition[0] = mSelectingChild.getX();
+                    mObjectStartPosition[1] = mSelectingChild.getY();
+                }
+
+                MotionEvent.PointerCoords pointerCoordsA = new MotionEvent.PointerCoords();
+                MotionEvent.PointerCoords pointerCoordsB = new MotionEvent.PointerCoords();
+                event.getPointerCoords(0, pointerCoordsA);
+                event.getPointerCoords(1, pointerCoordsB);
+
+                mMultiTouchStartPosition[0] = (pointerCoordsA.x + pointerCoordsB.x) / 2f;
+                mMultiTouchStartPosition[1] = (pointerCoordsA.y + pointerCoordsB.y) / 2f;
+
+                // rotation
+
+                double dy = pointerCoordsA.y - pointerCoordsB.y;
+                double dx = pointerCoordsA.x - pointerCoordsB.x;
+                mMultiTouchStartRotation = Math.atan2(dy, dx);
+                if (mSelectingChild != null) {
+                    mObjectStartRotation = mSelectingChild.getRotation();
+                }
+
+                // scale & size
+
+                mMultiTouchStartSize = Double.valueOf(Math.sqrt(dx * dx + dy * dy)).floatValue();
+                if (mSelectingChild != null) {
+                    mObjectStartSize[0] = mSelectingChild.getWidth();
+                    mObjectStartSize[1] = mSelectingChild.getHeight();
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    mTouchState = TouchState.MULTI_DRAG;
+                }
+
+                return true;
+            } else {
+                // if (mTouchState == TouchState.MULTI_DRAG) is not necessary
+
+                if (mSelectingChild != null) {
+
+                    int sw = getWidth() < getHeight() ? getWidth() : getHeight();
+
+                    MotionEvent.PointerCoords pointerCoordsA = new MotionEvent.PointerCoords();
+                    MotionEvent.PointerCoords pointerCoordsB = new MotionEvent.PointerCoords();
+                    event.getPointerCoords(0, pointerCoordsA);
+                    event.getPointerCoords(1, pointerCoordsB);
+
+                    float[] newTouchPosition = new float[]{
+                            (pointerCoordsA.x + pointerCoordsB.x) / 2f,
+                            (pointerCoordsA.y + pointerCoordsB.y) / 2f
+                    };
+
+                    float newX = mObjectStartPosition[0] + (newTouchPosition[0]
+                            - mMultiTouchStartPosition[0]);
+                    float newY = mObjectStartPosition[1] + (newTouchPosition[1]
+                            - mMultiTouchStartPosition[1]);
+
+                    double dy = pointerCoordsA.y - pointerCoordsB.y;
+                    double dx = pointerCoordsA.x - pointerCoordsB.x;
+                    double newRotation = Math.atan2(dy, dx);
+
+                    float dr = Double.valueOf(mObjectStartRotation
+                            + (newRotation - mMultiTouchStartRotation) * 180 / Math.PI)
+                            .floatValue();
+
+                    float whRatio = mObjectStartSize[0] / mObjectStartSize[1];
+
+                    float newSize = Double.valueOf(Math.sqrt(dx * dx + dy * dy)).floatValue();
+                    float ds = newSize - mMultiTouchStartSize;
+
+                    float dsx = mObjectStartSize[0] + (ds * whRatio);
+                    float dsy = mObjectStartSize[1] + (ds / whRatio);
+
+                    dsx = dsx > mSmallestObjectSize ? dsx : mSmallestObjectSize;
+                    dsy = dsy > mSmallestObjectSize ? dsy : mSmallestObjectSize;
+
+                    //mSelectingChild.setX(dragX - mSelectingChild.getWidth()/2);
+                    //mSelectingChild.setY(dragY - mSelectingChild.getHeight()/2);
+
+                    int availableFunctions = mSelectingChild.getAvailableFunctions();
+
+                    if ((availableFunctions & EditorObjectWrapper.FUNCTION_MOVE_X)
+                            == EditorObjectWrapper.FUNCTION_MOVE_X) {
+                        mSelectingChild.setX(newX);
+                    }
+
+                    if ((availableFunctions & EditorObjectWrapper.FUNCTION_MOVE_Y)
+                            == EditorObjectWrapper.FUNCTION_MOVE_Y) {
+                        mSelectingChild.setY(newY);
+                    }
+
+                    if ((availableFunctions & EditorObjectWrapper.FUNCTION_ROTATION)
+                            == EditorObjectWrapper.FUNCTION_ROTATION) {
+
+                        mSelectingChild.setRotation(dr);
+                    }
+
+                    if ((availableFunctions & EditorObjectWrapper.FUNCTION_SCALE_X)
+                            == EditorObjectWrapper.FUNCTION_SCALE_X) {
+
+                        mSelectingChild.setWidth(dsx < sw ? Math.round(dsx) : sw);
+                    }
+
+                    if ((availableFunctions & EditorObjectWrapper.FUNCTION_SCALE_Y)
+                            == EditorObjectWrapper.FUNCTION_SCALE_Y) {
+
+                        mSelectingChild.setHeight(dsy < sw ? Math.round(dsy) : sw);
+                    }
+                }
+
+                return true;
+            }
         }
 
         return super.onTouchEvent(event);
@@ -245,7 +372,6 @@ public class EditorLayout extends RelativeLayout {
             float dy = Math.abs(ccy - pointerY);
 
             if (dx < child.getWidth() / 2 && dy < child.getHeight() / 2) {
-                Log.d(TAG, "getChildAtCoords " + i);
 
                 removeView(child);
                 addView(child);

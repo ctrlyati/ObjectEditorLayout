@@ -1,13 +1,13 @@
 package app.ctrlyati.objecteditorlayout;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 
 /**
  * Created by Yati on 06/04/2559.
@@ -74,5 +74,33 @@ public class EditorObjectWrapper extends FrameLayout {
                 setBackgroundDrawable(null);
             }
         }
+    }
+
+    public void setHeight(int height) {
+
+        ViewGroup.LayoutParams layoutParams = getLayoutParams();
+        layoutParams.height = height;
+        setLayoutParams(layoutParams);
+
+        FrameLayout.LayoutParams childLayoutParams =
+                (FrameLayout.LayoutParams) getChild().getLayoutParams();
+        childLayoutParams.height = height;
+        getChild().setLayoutParams(childLayoutParams);
+    }
+
+    public void setWidth(int width) {
+
+        ViewGroup.LayoutParams layoutParams = getLayoutParams();
+        layoutParams.width = width;
+        setLayoutParams(layoutParams);
+
+        FrameLayout.LayoutParams childLayoutParams =
+                (FrameLayout.LayoutParams) getChild().getLayoutParams();
+        childLayoutParams.width = width;
+        getChild().setLayoutParams(childLayoutParams);
+    }
+
+    public View getChild() {
+        return getChildAt(0);
     }
 }

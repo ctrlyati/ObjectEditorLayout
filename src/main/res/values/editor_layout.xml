@@ -3,6 +3,7 @@
 
     <declare-styleable name="EditorLayout">
         <attr name="show_selecting_item" format="boolean"/>
+        <attr name="multitouch_support" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="EditorObjectWrapper">
