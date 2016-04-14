@@ -8,6 +8,8 @@
 
     <declare-styleable name="EditorObjectWrapper">
         <attr name="editor_function" format="integer">
+            <flag name="none" value="0" />
+
             <flag name="move_x" value="1" />
             <flag name="move_y" value="2" />
             <flag name="rotation" value="4" />

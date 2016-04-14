@@ -14,6 +14,8 @@ import android.widget.RelativeLayout;
  */
 public class EditorObjectWrapper extends FrameLayout {
 
+    public static final int FUNCTION_NONE = 0b00000;
+
     public static final int FUNCTION_MOVE_X = 0b00001;
     public static final int FUNCTION_MOVE_Y = 0b00010;
     public static final int FUNCTION_ROTATION = 0b00100;
