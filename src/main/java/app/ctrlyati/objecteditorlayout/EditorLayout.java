@@ -2,6 +2,9 @@ package app.ctrlyati.objecteditorlayout;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -9,6 +12,8 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * Created by Yati on 03/04/2559.
@@ -117,10 +122,11 @@ public class EditorLayout extends RelativeLayout {
                     if (mSelectingChild != null) {
                         mObjectStartPosition[0] = mSelectingChild.getX();
                         mObjectStartPosition[1] = mSelectingChild.getY();
-                    }
+                    } else {
 
-                    mTouchStatObject =
-                            getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
+                        mTouchStatObject =
+                                getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
+                    }
 
                     mTouchState = TouchState.DOWN;
                     return true;
@@ -468,5 +474,30 @@ public class EditorLayout extends RelativeLayout {
         } else {
             super.addView(child, width, height);
         }
+    }
+
+    public File captureView(File oldFile) {
+
+        //Create a Bitmap with the same dimensions
+        Bitmap image =
+                Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+        //Draw the view inside the Bitmap
+        this.draw(new Canvas(image));
+
+        //Store to sdcard
+        try {
+            String filename = "edited_" + oldFile.getName();
+            String path = oldFile.getParent();
+            File file = new File(path, filename);
+            FileOutputStream out = new FileOutputStream(file);
+
+            image.compress(Bitmap.CompressFormat.PNG, 90, out); //Output
+
+            return file;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
