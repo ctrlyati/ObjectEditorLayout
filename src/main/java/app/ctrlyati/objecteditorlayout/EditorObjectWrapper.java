@@ -4,8 +4,12 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Environment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +37,8 @@ public class EditorObjectWrapper extends FrameLayout {
 
     private int mAvailableFunction = FUNCTION_ALL;
 
+    private Drawable mBorder;
+
     //
     // Construction
     //
@@ -55,12 +61,26 @@ public class EditorObjectWrapper extends FrameLayout {
         mAvailableFunction =
                 typedArray.getInt(R.styleable.EditorObjectWrapper_editor_function, FUNCTION_ALL);
 
+
+        mBorder = typedArray.getDrawable(R.styleable.EditorObjectWrapper_border_drawable);
+        if(mBorder == null){
+            mBorder = ContextCompat.getDrawable(getContext(), R.drawable.border);
+        }
+
         typedArray.recycle();
     }
 
     //
     // getter & setter
     //
+
+    public Drawable getBorder() {
+        return mBorder;
+    }
+
+    public void setBorder(Drawable border) {
+        mBorder = border;
+    }
 
     public int getAvailableFunctions() {
         return mAvailableFunction;
@@ -73,7 +93,16 @@ public class EditorObjectWrapper extends FrameLayout {
     public void showBorder(boolean visible) {
 
         if (visible) {
-            setBackgroundResource(R.drawable.border);
+            Drawable border =
+                    DrawableCompat.wrap(ContextCompat.getDrawable(getContext(), R.drawable.border));
+            //DrawableCompat.setTintMode(border, PorterDuff.Mode.SRC_ATOP);
+            //DrawableCompat.setTint(border, mBorderColor);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                setBackground(border);
+            } else {
+                setBackgroundDrawable(border);
+            }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 setBackground(null);
@@ -110,6 +139,4 @@ public class EditorObjectWrapper extends FrameLayout {
     public View getChild() {
         return getChildAt(0);
     }
-
-
 }

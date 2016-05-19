@@ -21,6 +21,9 @@
             <flag name="all" value="31" />
         </attr>
 
+        <attr name="border_drawable" format="reference" />
+
     </declare-styleable>
+
 
 </resources>
