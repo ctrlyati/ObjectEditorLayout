@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -44,7 +43,7 @@ public class EditorLayout extends RelativeLayout {
     private float[] mObjectStartPosition = new float[]{ 0f, 0f };
     private EditorObjectWrapper mSelectingChild;
 
-    private EditorObjectWrapper mTouchStatObject;
+    private EditorObjectWrapper mTouchStartObject;
     private ScaleGestureDetector mScaleGestureDetector;
 
     private enum TouchState {
@@ -103,6 +102,11 @@ public class EditorLayout extends RelativeLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
+        if (!isEnabled()) {
+            mSelectingChild = null;
+            return false;
+        }
+
         if (event.getPointerCount() < 2) {
 
             MotionEvent.PointerCoords pointerCoords = new MotionEvent.PointerCoords();
@@ -119,13 +123,24 @@ public class EditorLayout extends RelativeLayout {
                     mTouchStartPosition[0] = pointerCoords.x;
                     mTouchStartPosition[1] = pointerCoords.y;
 
+                    //if (mSelectingChild != null) {
+                    //mObjectStartPosition[0] = mSelectingChild.getX();
+                    //mObjectStartPosition[1] = mSelectingChild.getY();
+                    //} else {
+
+                    mTouchStartObject =
+                            getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
+                    //}
+
                     if (mSelectingChild != null) {
+                        mSelectingChild.showBorder(false);
+                    }
+                    mSelectingChild = mTouchStartObject;
+
+                    if (mSelectingChild != null) {
+                        mSelectingChild.showBorder(true);
                         mObjectStartPosition[0] = mSelectingChild.getX();
                         mObjectStartPosition[1] = mSelectingChild.getY();
-                    } else {
-
-                        mTouchStatObject =
-                                getChildAtCoords(mTouchStartPosition[0], mTouchStartPosition[1]);
                     }
 
                     mTouchState = TouchState.DOWN;
@@ -134,6 +149,7 @@ public class EditorLayout extends RelativeLayout {
             } else if (mTouchState == TouchState.DOWN) {
 
                 if (event.getAction() == MotionEvent.ACTION_UP) {
+                    //if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
                     float radiusX = Math.abs(pointerCoords.x - mTouchStartPosition[0]);
                     float radiusY = Math.abs(pointerCoords.y - mTouchStartPosition[1]);
@@ -156,10 +172,6 @@ public class EditorLayout extends RelativeLayout {
                             return false;
                         }
 
-                        if (mIsShowSelecting) {
-                            // show clicking if you set it to show
-                            mSelectingChild.showBorder(true);
-                        }
                         // clicking done
 
                         mTouchStartPosition = new float[]{ 0f, 0f };
@@ -167,7 +179,6 @@ public class EditorLayout extends RelativeLayout {
                         mTouchState = TouchState.IDLE;
                         return true;
                     } else {
-
                         mTouchState = TouchState.IDLE;
                     }
                 } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -199,7 +210,13 @@ public class EditorLayout extends RelativeLayout {
 
                     // add this line to the if below to make it drag when it's start
                     // touching on the object that you want to drag
-                    // mSelectingChild == mTouchStatObject &&
+                    //if (mSelectingChild != mTouchStartObject) {
+                    //    if (mSelectingChild != null) {
+                    //        mSelectingChild.showBorder(false);
+                    //    }
+                    //    mSelectingChild = mTouchStartObject;
+                    //    mSelectingChild.showBorder(true);
+                    //}
 
                     if (mSelectingChild != null) {
 
