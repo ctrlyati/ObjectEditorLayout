@@ -158,7 +158,7 @@ public class EditorLayout extends RelativeLayout {
 
                         // trying to called it 'click'
 
-                        if (mSelectingChild != null && mIsShowSelecting) {
+                        if (mSelectingChild != null && !mIsShowSelecting) {
                             mSelectingChild.showBorder(false);
                         }
 
