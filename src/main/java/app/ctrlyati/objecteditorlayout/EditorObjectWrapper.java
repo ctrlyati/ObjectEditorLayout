@@ -92,24 +92,24 @@ public class EditorObjectWrapper extends FrameLayout {
 
     public void showBorder(boolean visible) {
 
-        if (visible) {
-            Drawable border =
-                    DrawableCompat.wrap(ContextCompat.getDrawable(getContext(), R.drawable.border));
-            //DrawableCompat.setTintMode(border, PorterDuff.Mode.SRC_ATOP);
-            //DrawableCompat.setTint(border, mBorderColor);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                setBackground(border);
-            } else {
-                setBackgroundDrawable(border);
-            }
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                setBackground(null);
-            } else {
-                setBackgroundDrawable(null);
-            }
-        }
+        //if (visible) {
+        //    Drawable border =
+        //            DrawableCompat.wrap(ContextCompat.getDrawable(getContext(), R.drawable.border));
+        //    //DrawableCompat.setTintMode(border, PorterDuff.Mode.SRC_ATOP);
+        //    //DrawableCompat.setTint(border, mBorderColor);
+        //
+        //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        //        setBackground(border);
+        //    } else {
+        //        setBackgroundDrawable(border);
+        //    }
+        //} else {
+        //    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        //        setBackground(null);
+        //    } else {
+        //        setBackgroundDrawable(null);
+        //    }
+        //}
     }
 
     public void setHeight(int height) {

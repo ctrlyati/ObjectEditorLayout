@@ -138,7 +138,7 @@ public class EditorLayout extends RelativeLayout {
                     mSelectingChild = mTouchStartObject;
 
                     if (mSelectingChild != null) {
-                        mSelectingChild.showBorder(true);
+                        //mSelectingChild.showBorder(true);
                         mObjectStartPosition[0] = mSelectingChild.getX();
                         mObjectStartPosition[1] = mSelectingChild.getY();
                     }
