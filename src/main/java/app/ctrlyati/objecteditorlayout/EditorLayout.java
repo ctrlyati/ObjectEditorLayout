@@ -141,10 +141,10 @@ public class EditorLayout extends RelativeLayout {
                         //mSelectingChild.showBorder(true);
                         mObjectStartPosition[0] = mSelectingChild.getX();
                         mObjectStartPosition[1] = mSelectingChild.getY();
-                    }
 
-                    mTouchState = TouchState.DOWN;
-                    return true;
+                        mTouchState = TouchState.DOWN;
+                        return true;
+                    }
                 }
             } else if (mTouchState == TouchState.DOWN) {
 
@@ -373,7 +373,8 @@ public class EditorLayout extends RelativeLayout {
             }
         }
 
-        return super.onTouchEvent(event);
+//        return super.onTouchEvent(event);
+        return false;
     }
 
     private EditorObjectWrapper getChildAtCoords(float pointerX, float pointerY) {
